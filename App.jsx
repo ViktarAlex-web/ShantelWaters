@@ -1,5 +1,3 @@
-
-```jsx
 import { useState, useEffect } from "react";
 
 const SUPABASE_URL = "https://jbthiszwislfoedjcwnx.supabase.co";
@@ -284,6 +282,3 @@ export default function ShantelWaters() {
     </div>
   );
 }
-```
-
-Go to GitHub → `src/App.jsx` → tap the ✏️ pencil → select all → paste this → commit! 💜
