@@ -1,7 +1,11 @@
+Here you go! Copy everything below and replace your `src/App.jsx` on GitHub:
+
+```jsx
 import { useState, useEffect } from "react";
 
 const SUPABASE_URL = "https://jbthiszwislfoedjcwnx.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpidGhpc3p3aXNsZm9lZGpjd254Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzgzODAsImV4cCI6MjA5NTA1NDM4MH0.pJ4S_0oDrBkIusyeoyhnHHpq_ogBjYq-Rb-OiyHnhu8";
+const ADMIN_PASSWORD = "MavhuraS";
 
 const headers = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" };
 
@@ -42,7 +46,31 @@ const categories = [
 const bgColors = ["bg-purple-100","bg-pink-100","bg-violet-100","bg-fuchsia-100","bg-purple-200","bg-pink-200","bg-violet-200","bg-pink-50"];
 const icons = ["💜","🌸","✨","🎀","💍","📿","🦋","🌷"];
 
-function ProductCard({ product, index, onUpload, onDelete }) {
+function AdminLock({ onUnlock, onClose }) {
+  const [pw, setPw] = useState("");
+  const [error, setError] = useState(false);
+  const check = () => {
+    if (pw === ADMIN_PASSWORD) { onUnlock(); setError(false); }
+    else setError(true);
+  };
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(59,7,100,0.5)", backdropFilter: "blur(8px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{ background: "white", borderRadius: "24px", padding: "36px", width: "100%", maxWidth: "360px", boxShadow: "0 30px 60px rgba(124,58,237,0.25)", textAlign: "center" }}>
+        <div style={{ fontSize: "36px", marginBottom: "12px" }}>🔒</div>
+        <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "24px", fontWeight: "700", color: "#3b0764", margin: "0 0 8px" }}>Admin Access</h3>
+        <p style={{ fontSize: "13px", color: "#7c3aed", opacity: 0.7, margin: "0 0 20px" }}>Enter your password to make changes</p>
+        <input type="password" placeholder="Password" value={pw}
+          onChange={e => { setPw(e.target.value); setError(false); }}
+          onKeyDown={e => e.key === "Enter" && check()}
+          style={{ border: error ? "1.5px solid #e11d48" : "1.5px solid #e9d5ff", borderRadius: "12px", padding: "12px 16px", fontSize: "14px", outline: "none", color: "#4c1d95", width: "100%", boxSizing: "border-box", marginBottom: "8px" }} />
+        {error && <p style={{ color: "#e11d48", fontSize: "12px", margin: "0 0 12px" }}>Wrong password, try again 💔</p>}
+        <button onClick={check} style={{ background: "linear-gradient(135deg,#7c3aed,#db2777)", color: "white", border: "none", borderRadius: "30px", padding: "12px 32px", fontSize: "14px", fontWeight: "700", cursor: "pointer", width: "100%" }}>Unlock 💜</button>
+      </div>
+    </div>
+  );
+}
+
+function ProductCard({ product, index, onUpload, onDelete, isAdmin, onNeedAuth }) {
   const [cart, setCart] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -69,9 +97,12 @@ function ProductCard({ product, index, onUpload, onDelete }) {
           }
           {product.badge && <div style={{ position: "absolute", top: "12px", left: "12px", background: "linear-gradient(135deg,#a855f7,#ec4899)", color: "white", fontSize: "10px", fontWeight: "700", padding: "3px 10px", borderRadius: "20px" }}>{product.badge}</div>}
           <label style={{ position: "absolute", bottom: "10px", right: "10px", background: "rgba(255,255,255,0.9)", border: "1px solid #e9d5ff", borderRadius: "50%", width: "34px", height: "34px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", opacity: hovered ? 1 : 0, transition: "opacity 0.3s", fontSize: "16px" }}>
-            {uploading ? "⏳" : "📷"}<input type="file" accept="image/*" style={{ display: "none" }} onChange={handleFile} />
+            {uploading ? "⏳" : "📷"}
+            <input type="file" accept="image/*" style={{ display: "none" }}
+              onChange={e => { if (!isAdmin) { onNeedAuth(); return; } handleFile(e); }} />
           </label>
-          <button onClick={() => onDelete(product.id)} style={{ position: "absolute", top: "10px", right: "10px", background: "rgba(255,255,255,0.9)", border: "1px solid #fecdd3", borderRadius: "50%", width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", opacity: hovered ? 1 : 0, transition: "opacity 0.3s", fontSize: "12px", color: "#e11d48" }}>✕</button>
+          <button onClick={() => { if (!isAdmin) { onNeedAuth(); return; } onDelete(product.id); }}
+            style={{ position: "absolute", top: "10px", right: "10px", background: "rgba(255,255,255,0.9)", border: "1px solid #fecdd3", borderRadius: "50%", width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", opacity: hovered ? 1 : 0, transition: "opacity 0.3s", fontSize: "12px", color: "#e11d48" }}>✕</button>
         </div>
         <div style={{ padding: "16px" }}>
           <p style={{ fontSize: "10px", color: "#7c3aed", margin: "0 0 4px", letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: "600" }}>{categories.find(c => c.id === product.category)?.label}</p>
@@ -97,6 +128,8 @@ export default function ShantelWaters() {
   const [email, setEmail] = useState("");
   const [subDone, setSubDone] = useState(false);
   const [dbError, setDbError] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showLock, setShowLock] = useState(false);
 
   useEffect(() => { load(); }, []);
 
@@ -150,7 +183,7 @@ export default function ShantelWaters() {
         @keyframes sp{0%,100%{transform:scale(1) rotate(0deg)}50%{transform:scale(1.3) rotate(15deg)}}
       `}</style>
       <div className="blob1"/><div className="blob2"/><div className="blob3"/>
-      {dbError && <div style={{ background: "#fef2f2", borderBottom: "1px solid #fecaca", padding: "10px 24px", textAlign: "center", fontSize: "13px", color: "#dc2626", position: "relative", zIndex: 101 }}>⚠️ Run the SQL setup in Supabase first.</div>}
+      {dbError && <div style={{ background: "#fef2f2", borderBottom: "1px solid #fecaca", padding: "10px 24px", textAlign: "center", fontSize: "13px", color: "#dc2626", position: "relative", zIndex: 101 }}>⚠️ Database connection issue.</div>}
       <nav style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(250,245,255,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(216,180,254,0.3)", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between", height: "64px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <span className="sp" style={{ fontSize: "22px" }}>🌸</span>
@@ -188,7 +221,10 @@ export default function ShantelWaters() {
               <span>🔍</span>
               <input placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} style={{ border: "none", outline: "none", fontSize: "13px", color: "#4c1d95", background: "transparent", width: "120px", fontFamily: "'DM Sans',sans-serif" }} />
             </div>
-            <button onClick={() => setShowModal(true)} style={{ background: "linear-gradient(135deg,#a855f7,#ec4899)", color: "white", border: "none", borderRadius: "30px", padding: "9px 20px", fontSize: "13px", fontWeight: "600", cursor: "pointer" }}>+ Add Product</button>
+            <button onClick={() => { if (isAdmin) setShowModal(true); else setShowLock(true); }}
+              style={{ background: "linear-gradient(135deg,#a855f7,#ec4899)", color: "white", border: "none", borderRadius: "30px", padding: "9px 20px", fontSize: "13px", fontWeight: "600", cursor: "pointer" }}>
+              {isAdmin ? "🔓 Add Product" : "🔒 Add Product"}
+            </button>
           </div>
         </div>
         <div style={{ display: "flex", gap: "10px", marginBottom: "36px", flexWrap: "wrap" }}>
@@ -201,7 +237,7 @@ export default function ShantelWaters() {
           : filtered.length === 0
             ? <div style={{ textAlign: "center", padding: "60px", color: "#9333ea", opacity: 0.5 }}>No products found 🌸</div>
             : <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: "24px" }}>
-                {filtered.map((p, i) => <ProductCard key={p.id} product={p} index={i} onUpload={handleUpload} onDelete={handleDelete} />)}
+                {filtered.map((p, i) => <ProductCard key={p.id} product={p} index={i} onUpload={handleUpload} onDelete={handleDelete} isAdmin={isAdmin} onNeedAuth={() => setShowLock(true)} />)}
               </div>
         }
       </section>
@@ -226,6 +262,7 @@ export default function ShantelWaters() {
         <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "22px", fontWeight: "700", background: "linear-gradient(135deg,#7c3aed,#db2777)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", marginBottom: "8px" }}>ShantelWaters 🌸</div>
         <p style={{ fontSize: "12px", color: "#9333ea", opacity: 0.6 }}>© 2026 ShantelWaters · Made with 💜 · All rights reserved</p>
       </footer>
+      {showLock && <AdminLock onUnlock={() => { setIsAdmin(true); setShowLock(false); }} onClose={() => setShowLock(false)} />}
       {showModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(59,7,100,0.4)", backdropFilter: "blur(8px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }} onClick={e => e.target === e.currentTarget && setShowModal(false)}>
           <div style={{ background: "white", borderRadius: "24px", padding: "36px", width: "100%", maxWidth: "420px", boxShadow: "0 30px 60px rgba(124,58,237,0.25)" }}>
@@ -247,4 +284,7 @@ export default function ShantelWaters() {
       )}
     </div>
   );
-     }
+}
+```
+
+Go to GitHub → `src/App.jsx` → tap the ✏️ pencil → select all → paste this → commit! 💜
