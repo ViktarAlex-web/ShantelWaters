@@ -1,4 +1,3 @@
-Here you go! Copy everything below and replace your `src/App.jsx` on GitHub:
 
 ```jsx
 import { useState, useEffect } from "react";
